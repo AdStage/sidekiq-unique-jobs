@@ -4,7 +4,14 @@ module SidekiqUniqueJobs
       :unique_prefix,
       :unique_args_enabled,
       :default_expiration,
-      :default_unlock_order
+      :default_unlock_order,
+      :unique_storage_method,
+      :redis_mode,
+      :default_run_lock,
+      :default_run_lock_retry_interval,
+      :default_run_lock_retries,
+      :default_reschedule_on_lock_fail,
+      :default_run_lock_expire
     ]
 
     class << self
@@ -30,13 +37,16 @@ module SidekiqUniqueJobs
       end
     end
 
-    def testing_enabled?
-      if Sidekiq.const_defined?('Testing') && Sidekiq::Testing.enabled?
-        require 'sidekiq_unique_jobs/testing'
-        return true
-      end
+    def inline_testing_enabled?
+      testing_enabled? && Sidekiq::Testing.inline?
+    end
 
-      false
+    def mocking?
+      inline_testing_enabled? && redis_test_mode.to_sym == :mock
+    end
+
+    def testing_enabled?
+      Sidekiq.const_defined?('Testing') && Sidekiq::Testing.enabled?
     end
 
     def unique_args_enabled?

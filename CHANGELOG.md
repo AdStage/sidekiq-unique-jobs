@@ -1,3 +1,23 @@
+## v3.0.15 - unreleased
+- Jobs only ever unlock themselves now (see #96 & #94 for info) thanks @pik
+- Slight refactoring and internal renaming. Shouldn't affect anyone
+- Run locks as an alternative when you only need to prevent the same job running twice but want to be able to schedule it multiple times. See #99 (thanks @pik)
+- Fixes #90, #92, #93, #97, #98, #100, #101, #105
+
+## v3.0.14
+- Improve uniqueness check performance thanks @mpherham
+- Remove locks in sidekiq fake testing mode
+- Do not unlock jobs when sidekiq is shutting down 
+
+## v3.0.13
+- Improved testing capabilities (testing uniqueness should not work better)
+- Configurable logging of duplicate payloads
+- Now requires `sidekiq_unique_ext` and `sidekiq/api` by default
+- Drop support for MRI 1.9 and sidekiq 2
+
+## v3.0.11
+- Ensure threadsafety (thanks to adstage-david)
+
 ## v3.0.9
 - Fixed that all jobs stopped processing
 

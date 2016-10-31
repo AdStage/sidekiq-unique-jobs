@@ -2,6 +2,10 @@
 
 The missing unique jobs for sidekiq
 
+## Requirements
+
+See https://github.com/mperham/sidekiq#requirements for what is required. Starting from 3.0.13 only sidekiq 3 is supported and support for MRI 1.9 is dropped (it might work but won't be worked on)
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -38,6 +42,19 @@ sidekiq_options unique: true, unique_job_expiration: 120 * 60 # 2 hours
 ```
 
 Requiring the gem in your gemfile should be sufficient to enable unique jobs.
+
+### Usage with ActiveJob
+
+```ruby
+Sidekiq.default_worker_options = {
+   'unique' => true,
+   'unique_args' => proc do |args|
+     [args.first.except('job_id')]
+   end
+}
+SidekiqUniqueJobs.config.unique_args_enabled = true
+```
+
 
 ### Finer Control over Uniqueness
 
@@ -92,7 +109,52 @@ class UniqueJobWithFilterMethod
 end
 ```
 
+### After Unlock Callback
+
+If you are using :after_yield as your unlock ordering, Unique Job offers a callback to perform some work after the block is yielded.
+
+```ruby
+class UniqueJobWithFilterMethod
+  include Sidekiq::Worker
+  sidekiq_options unique: true,
+
+  def after_unlock
+   # block has yielded and lock is released
+  end
+  ...
+end.
+
+```
+
+### Unique Storage Method
+
+Starting from sidekiq-unique-jobs 3.0.14 we will use the `set` method in a way that has been available since redis 2.6.12. If you are on an older redis version you will have to change a config value like below.
+
+```ruby
+SidekiqUniqueJobs.config.unique_storage_method = :old
+```
+
+That should allow you to keep using redis in the old fashion way. See #89 for mor information.
+
+
+### Logging
+
+To see logging in sidekiq when duplicate payload has been filtered out you can enable on a per worker basis using the sidekiq options.  The default value is false
+
+```ruby
+class UniqueJobWithFilterMethod
+  include Sidekiq::Worker
+  sidekiq_options unique: true,
+                  log_duplicate_payload: true
+
+  ...
+
+end
+```
+
 ### Testing
+
+To enable the testing for `sidekiq-unique-jobs`, add `require 'sidekiq_unique_jobs/testing'` to your testing helper.
 
 SidekiqUniqueJobs uses mock_redis for inline testing. Due to complaints about having that as a runtime dependency it was made a development dependency so if you are relying on inline testing you will have to add `gem 'mock_redis'` to your Gemfile.
 
@@ -111,3 +173,7 @@ SidekiqUniqueJobs uses mock_redis for inline testing. Due to complaints about ha
 - https://github.com/sax
 - https://github.com/eduardosasso
 - https://github.com/KensoDev
+- https://github.com/adstage-david
+- https://github.com/jprincipe
+- https://github.com/crberube
+- https://github.com/simonoff
